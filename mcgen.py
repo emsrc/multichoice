@@ -5,7 +5,7 @@ Generate multiple choice questions in Bokmal and Nynorsk and corresponding
 answer key from Excel spreadsheet
 """
 
-# Requires Python2, Numpy and Pandas 
+# Requires Python2, Numpy, Pandas, xlrd 
 
 # EM - 27-05-2019
 
@@ -17,7 +17,7 @@ from numpy.random import shuffle
 
 
 def generate(xls_fname, randomize=False, select_col=0, encoding="utf-8",
-             width=120, tab_names=False):
+             width=120, tab_names=False, quest_col=0):
     xls = ExcelFile(xls_fname)
     fname_pat = splitext(xls_fname)[0] + "_{}.txt"
     languages = "bokmal", "nynorsk"
@@ -27,6 +27,11 @@ def generate(xls_fname, randomize=False, select_col=0, encoding="utf-8",
     quest_n = 0
     rand_index = range(4)
     choices = "ABCD"
+
+    if quest_col == 0:
+        quest_offset = 0
+    else:
+        quest_offset = quest_col - 1
     
     for sheet_name in xls.sheet_names:
         df = xls.parse(sheet_name)
@@ -43,15 +48,19 @@ def generate(xls_fname, randomize=False, select_col=0, encoding="utf-8",
                 key_file.write(u"{}\t{}\n".format(quest_n, correct))
                     
                 for i, outf in enumerate(lang_files):
-                    question = row.iat[i * 5]
+                    question = row.iat[quest_offset + i * 5]
                     if not isinstance(question, basestring): continue
                     question = u"\n\t".join(wrap(question, width))
                     outf.write(u"{}.\t{}\n".format(quest_n, question))
-                    answers = row.iloc[i * 5 + 1: (i + 1) * 5]
+                    answers = row.iloc[quest_offset + i * 5 + 1: quest_offset + (i + 1) * 5]
                     shuffled_answers = answers[rand_index]
                     for choice, answer in zip(choices, shuffled_answers):
                         answer = u"\n\t\t".join(wrap(unicode(answer), width))
                         outf.write(u"\t{})\t{}\n".format(choice, answer))
+                    if quest_offset:
+                        ids = row.iloc[0:quest_offset]
+                        ids = u", ".join(map(unicode, ids.values))
+                        outf.write(u"\t<<< {} >>>\n".format(ids))
                     outf.write(u"\n")
                                    
 
@@ -97,10 +106,17 @@ if __name__ == "__main__":
         metavar="NUMBER",
         default=120,
         help="max number of characters per line (defaults to 120)")
+
+    parser.add_argument(
+        "-q", "--quest_col",
+        type=int,
+        metavar="NUMBER",
+        default=0,
+        help="number of column containing first question")      
     
     args = parser.parse_args()
     generate(args.xls_fname, args.randomize, args.select_col, args.encoding,
-             args.width, args.tab_names)
+             args.width, args.tab_names, args.quest_col)
 
     
     
