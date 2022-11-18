@@ -5,9 +5,9 @@ Generate multiple choice questions in Bokmal and Nynorsk and corresponding
 answer key from Excel spreadsheet
 """
 
-# Requires Python2, Numpy, Pandas, xlrd 
+# Requires Python3, Numpy, Pandas, xlrd 
 
-# EM - 27-05-2019
+# EM - 2022-11-18
 
 from codecs import open
 from pandas import ExcelFile
@@ -49,17 +49,19 @@ def generate(xls_fname, randomize=False, select_col=0, encoding="utf-8",
                     
                 for i, outf in enumerate(lang_files):
                     question = row.iat[quest_offset + i * 5]
-                    if not isinstance(question, basestring): continue
+                    if not isinstance(question, str): continue
                     question = u"\n\t".join(wrap(question, width))
                     outf.write(u"{}.\t{}\n".format(quest_n, question))
                     answers = row.iloc[quest_offset + i * 5 + 1: quest_offset + (i + 1) * 5]
                     shuffled_answers = answers[rand_index]
                     for choice, answer in zip(choices, shuffled_answers):
-                        answer = u"\n\t\t".join(wrap(unicode(answer), width))
+                        # answer = u"\n\t\t".join(wrap(unicode(answer), width))
+                        answer = u"\n\t\t".join(wrap(str(answer), width))
                         outf.write(u"\t{})\t{}\n".format(choice, answer))
                     if quest_offset:
                         ids = row.iloc[0:quest_offset]
-                        ids = u", ".join(map(unicode, ids.values))
+                        # ids = u", ".join(map(unicode, ids.values))
+                        ids = u", ".join(map(str, ids.values))
                         outf.write(u"\t<<< {} >>>\n".format(ids))
                     outf.write(u"\n")
                                    

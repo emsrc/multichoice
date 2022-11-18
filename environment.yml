@@ -1,0 +1,7 @@
+name: multichoice
+channels:
+  - defaults
+dependencies:
+  - python=3.9
+  - pandas
+  - openpyxl
